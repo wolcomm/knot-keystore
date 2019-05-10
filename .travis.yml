@@ -1,0 +1,27 @@
+language: python
+python:
+- '3.4'
+- '3.5'
+- '3.6'
+- '3.7'
+matrix:
+  fast_finish: true
+before_install:
+- sudo apt-get -qq update
+install:
+- pip install -U pip
+- pip install -U setuptools
+- pip install tox-travis codecov
+script:
+- tox
+after_success:
+- codecov
+deploy:
+  provider: pypi
+  user: benmaddison
+  distributions: sdist bdist_wheel
+  password:
+    secure: lx+uHjOQtJsWudZ4c7Uwx8HigOgt3RWjLXuzEAu0KSB3vUC5iwryECpwnflKgPUwX/YA1Wr76LsEe3u4j7QZukgLoOZUvIx/qGDNPLgepSqw8Rr4bzsde3zyJWDlx7xegz/QfpX+Sgj6unR7GJlBmjXYGVsXlBEteHMQxr4ksOJUqEzXTBfs7Wy+noh/dV67REEfex2K9Qd1jPVJSZfqaYPrXo49mRDCRX/r710sEqVeXsmms2QIiDqv12L8o23oYII7qCQekh+wcXKhs7mBNCj1cIacpRCgUQPqGA5rCvGS7mTQLeyPxUKzIdC3pzw+N67DHKGZexATQ9sUEEXbCQLKEsAkVQD3RKHb28nxjmAD129DzuO5P90Jt/6XjZt688E3MFiMTDy1LfODE9ZyVMCctJCBtjW2DCPuxraWrohq4KphKb1NTGa+iLpZNGU8srEtZbJZ1XwDGqDYUvoqLeNuG04YbrNHBfzM2uvn9j7gzCGJ40gjQWv+VGot6p7KZqVhOv1B6noJgI0CZS/olS4KqX9O/0nPcYgrh5Cj7vd9bs4SeAr9XH05J+Gj4+piVJ0urd623UpUBlDCVyB6Jn9LVIfXZR02QW1yi05h5FCixiRwOpHT7eC8WKtjZlmD4HM985+0U9tuyseSst17qgpAL+3MOAfjPPLJ6qbqZd8=
+  on:
+    tags: true
+    python: '3.6'
