@@ -10,7 +10,7 @@ services:
 matrix:
   fast_finish: true
 before_install:
-- pip install -U pip setuptools codecov
+- pip install --upgrade --user pip setuptools codecov
 install:
 - IMAGE_ID="$(docker build --build-arg VERSION="${VERSION}" --quiet .)"
 - CONTAINER_ID="$(docker run --detach --rm "${IMAGE_ID}")"
