@@ -1,0 +1,8 @@
+$TTL 300
+$ORIGIN example.com.
+
+@   IN SOA  ns hostmaster (0 1h 30 4w 1h)
+    IN NS   ns
+    IN TXT  "example.com test zone"
+
+ns  IN AAAA 2001:db8::1

@@ -9,17 +9,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""knot_keystore cli module tests."""
+"""knot_keystore cli module."""
 
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import knot_keystore.cli  # noqa
+import libknot.control
 
 
-class TestCli(object):
-    """Test class."""
-
-    def test_cli(self):
-        """Dummy test."""
-        knot_keystore.cli.main()
+def main():
+    """Execute knot-keystore cli utility."""
+    knot_sock = "/run/knot/knot.sock"
+    knot = libknot.control.KnotCtl()
+    try:
+        knot.connect(knot_sock)
+    except Exception as e:
+        raise e
