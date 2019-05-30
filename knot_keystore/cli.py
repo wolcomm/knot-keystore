@@ -14,14 +14,29 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import libknot.control
+import argparse
+import shutil
+
+from knot_keystore.knot import Knot
+
+
+def parse_args():
+    """Parse command line args."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--socket", "-s",
+                        default="/run/knot/knot.sock",
+                        help="path to knotc control socket")
+    args = parser.parse_args()
+    return args
 
 
 def main():
     """Execute knot-keystore cli utility."""
-    knot_sock = "/run/knot/knot.sock"
-    knot = libknot.control.KnotCtl()
-    try:
-        knot.connect(knot_sock)
-    except Exception as e:
-        raise e
+    args = parse_args()
+    with Knot(socket=args.socket) as knot:
+        storage, kaspdb = knot.kaspdb_path
+        with knot.freeze():
+            archive = shutil.make_archive(base_name="keys", format="gztar",
+                                          root_dir=storage, base_dir=kaspdb)
+            print(archive)
+    return
