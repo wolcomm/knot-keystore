@@ -15,9 +15,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
-import shutil
+import logging
 
-from knot_keystore.knot import Knot
+from knot_keystore.archive import get_plugins
+
+log = logging.getLogger(__name__)
 
 
 def parse_args():
@@ -26,17 +28,38 @@ def parse_args():
     parser.add_argument("--socket", "-s",
                         default="/run/knot/knot.sock",
                         help="path to knotc control socket")
+    parser.add_argument("--plugin", "-p",
+                        choices=get_plugins(),
+                        default="local",
+                        help="select archival plugin")
+    parser.add_argument("-v", dest="verbosity",
+                        default=0,
+                        action="count",
+                        help="increase output verbosity")
     args = parser.parse_args()
     return args
 
 
+def set_loglevel(verbosity=0):
+    """Set logging level."""
+    level = 40 - (verbosity * 10)
+    logging.basicConfig(level=level)
+    return
+
+
 def main():
     """Execute knot-keystore cli utility."""
-    args = parse_args()
-    with Knot(socket=args.socket) as knot:
-        storage, kaspdb = knot.kaspdb_path
-        with knot.freeze():
-            archive = shutil.make_archive(base_name="keys", format="gztar",
-                                          root_dir=storage, base_dir=kaspdb)
-            print(archive)
-    return
+    try:
+        args = parse_args()
+        set_loglevel(verbosity=args.verbosity)
+        archive_plugin = get_plugins(name=args.plugin)
+        archive = archive_plugin(knotc_socket=args.socket)
+        archive.create_archive()
+        print(archive.archive_path)
+    except KeyboardInterrupt:
+        log.error("Aborting")
+        return 130
+    except Exception as e:
+        log.error(f"An error occurred during execution: {e}")
+        return 1
+    return 0
