@@ -91,10 +91,13 @@ def with_encrypted_archive(func):
 class ArchiveBase(object):
     """Base class for archive plugins."""
 
-    def __init__(self, knotc_socket=None):
+    def __init__(self, knotc_socket=None, config=None):
         """Initialise a new instance."""
         log.debug(f"Initialising archive plugin instance {self}")
         self._knotc_socket = knotc_socket
+        if config is not None:
+            for k, v in config.items():
+                setattr(self, k, v)
 
     @property
     def knotc_socket(self):
@@ -109,7 +112,7 @@ class ArchiveBase(object):
         """Create an archive of the knot kasp-db."""
         log.debug("Preparing to create temporary kasp-db archive")
         base_name = os.path.join(tmp_path, "kasp-db")
-        with Knot(socket=self._knotc_socket) as knot:
+        with Knot(socket=self.knotc_socket) as knot:
             storage_path, kaspdb_dir = knot.kaspdb_path
             with knot.freeze():
                 log.debug("Trying to create temporary kasp-db archive")
@@ -131,15 +134,15 @@ class ArchiveLocal(ArchiveBase):
     @with_encrypted_archive
     def exec(self, ciphertext_path=None, key=None):
         """Execute archival proceedure."""
-        log.debug("Trying to save encrypted archive")
+        log.debug(f"Trying to save encrypted archive to {self.path}")
         try:
-            archive_path = shutil.copy(src=ciphertext_path, dst=".")
+            archive_path = shutil.copy(src=ciphertext_path, dst=self.path)
         except Exception as e:
             log.error(f"Failed to copy encrypted archive from \
                         {ciphertext_path}: {e}")
             raise e
         log.info(f"Encrypted archive written to {archive_path}")
-        key_path = "kasp-db.key"
+        key_path = os.path.join(self.path, "kasp-db.key")
         log.debug("Trying to write encryption key to file")
         try:
             with open(key_path, "wb") as key_file:

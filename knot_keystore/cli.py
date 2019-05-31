@@ -17,9 +17,13 @@ from __future__ import unicode_literals
 import argparse
 import logging
 
+import yaml
+
 from knot_keystore.archive import get_plugins
 
 log = logging.getLogger(__name__)
+
+DEFAULT_CONFIG_PATH = "/etc/knot-keystore.yaml"
 
 
 def parse_args():
@@ -32,6 +36,9 @@ def parse_args():
                         choices=get_plugins(),
                         default="local",
                         help="select archival plugin")
+    parser.add_argument("--config-file", "-c",
+                        default=DEFAULT_CONFIG_PATH,
+                        help="path to a configuration file")
     parser.add_argument("-v", dest="verbosity",
                         default=0,
                         action="count",
@@ -47,13 +54,36 @@ def set_loglevel(verbosity=0):
     return
 
 
+def read_config(file=None):
+    """Read configuration from a file."""
+    log.debug(f"Trying to read config from {file}")
+    try:
+        with open(file) as f:
+            config_data = yaml.safe_load(f)
+    except FileNotFoundError as e:
+        if file == DEFAULT_CONFIG_PATH:
+            log.warning("Default config file not found")
+            config_data = {"plugins": {}}
+        else:
+            log.error(f"Failed to open config file: {e}")
+            raise e
+    except Exception as e:
+        log.error(f"Failed to load yaml from config file: {e}")
+        raise e
+    config = argparse.Namespace(**config_data)
+    return config
+
+
 def main():
     """Execute knot-keystore cli utility."""
     try:
         args = parse_args()
         set_loglevel(verbosity=args.verbosity)
+        config = read_config(file=args.config_file)
         archive_plugin = get_plugins(name=args.plugin)
-        archive = archive_plugin(knotc_socket=args.socket)
+        plugin_config = config.plugins.get(args.plugin, {})
+        archive = archive_plugin(knotc_socket=args.socket,
+                                 config=plugin_config)
         archive.exec()
     except KeyboardInterrupt:
         log.error("Caught keyboard interrupt: aborting")

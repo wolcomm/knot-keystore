@@ -22,4 +22,5 @@ class TestCli(object):
 
     def test_cli(self):
         """Dummy test."""
-        knot_keystore.cli.main()
+        retval = knot_keystore.cli.main()
+        assert retval == 0
