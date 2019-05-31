@@ -54,10 +54,9 @@ def main():
         set_loglevel(verbosity=args.verbosity)
         archive_plugin = get_plugins(name=args.plugin)
         archive = archive_plugin(knotc_socket=args.socket)
-        archive.create_archive()
-        print(archive.archive_path)
+        archive.exec()
     except KeyboardInterrupt:
-        log.error("Aborting")
+        log.error("Caught keyboard interrupt: aborting")
         return 130
     except Exception as e:
         log.error(f"An error occurred during execution: {e}")

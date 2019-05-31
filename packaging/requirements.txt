@@ -1,1 +1,2 @@
+cryptography >= 2.7, <3.0
 libknot >= 2.8.1
