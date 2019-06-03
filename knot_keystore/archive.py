@@ -104,7 +104,7 @@ class ArchiveBase(object):
         """Get knotc_socket property."""
         return self._knotc_socket
 
-    def exec(self, ciphertext_path=None, key=None):
+    def exec(self, ciphertext_path=None, key=None):  # pragma: no cover
         """Execute archival proceedure, overide in child classes."""
         raise NotImplementedError
 

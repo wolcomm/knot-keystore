@@ -103,7 +103,7 @@ class Knot(object):
         while True:
             time.sleep(1)
             for s in self.zone_status.values():
-                if s["freeze"] != "yes":
+                if s["freeze"] != "yes":  # pragma: no cover
                     continue
             break
         log.debug("Sucessfully froze zone operations")
