@@ -55,5 +55,6 @@ setup(
     url=package["__url__"],
     download_url="{}/{}".format(package["__url__"], package["__version__"]),
     install_requires=package["__requirements__"],
+    python_requires=package["__python_requires__"],
     entry_points=package["__entry_points__"]
 )

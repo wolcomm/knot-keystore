@@ -21,6 +21,7 @@ __author_email__ = "benm@workonline.africa"
 __licence__ = "MIT"
 __copyright__ = "Copyright (c) 2019 Workonline Communications (Pty) Ltd"
 __url__ = "https://github.com/wolcomm/knot-keystore"
+__python_requires__ = ">=3.6, <4.0"
 __classifiers__ = [
     'Development Status :: 3 - Alpha',
     'Environment :: Console',
