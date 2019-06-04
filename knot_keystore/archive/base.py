@@ -9,13 +9,12 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""knot_keystore archive module."""
+"""knot_keystore.archive.base module."""
 
 import functools
 import logging
 import os
 import shutil
-import stat
 import tempfile
 
 from cryptography.fernet import Fernet
@@ -23,23 +22,6 @@ from cryptography.fernet import Fernet
 from knot_keystore.knot import Knot
 
 log = logging.getLogger(__name__)
-
-
-def get_plugins(name=None):
-    """Find archive plugins."""
-    log.debug("Trying to find available plugins")
-    builtin = {"local": ArchiveLocal}
-    plugins = builtin
-    log.debug(f"Available plugins: {plugins}")
-    if name is not None:
-        log.debug(f"Trying to find class for {name} plugin")
-        try:
-            plugin = plugins[name]
-            log.debug(f"Found class for {name} plugin: {plugin.__name__}")
-            return plugin
-        except KeyError as e:
-            raise e
-    return plugins.keys()
 
 
 def with_encrypted_archive(func):
@@ -123,30 +105,3 @@ class ArchiveBase(object):
                     raise e
                 log.debug(f"Created temporary archive: {path}")
         return path
-
-
-class ArchiveLocal(ArchiveBase):
-    """Archive knot kasp-db to local filesystem."""
-
-    @with_encrypted_archive
-    def exec(self, ciphertext_path=None, key=None):
-        """Execute archival proceedure."""
-        log.debug(f"Trying to save encrypted archive to {self.path}")
-        try:
-            archive_path = shutil.copy(src=ciphertext_path, dst=self.path)
-        except Exception as e:
-            log.error(f"Failed to copy encrypted archive from \
-                        {ciphertext_path}: {e}")
-            raise e
-        log.info(f"Encrypted archive written to {archive_path}")
-        key_path = os.path.join(self.path, "kasp-db.key")
-        log.debug("Trying to write encryption key to file")
-        try:
-            with open(key_path, "wb") as key_file:
-                key_file.write(key)
-            os.chmod(key_path, stat.S_IRUSR | stat.S_IWUSR)
-        except Exception as e:
-            log.error(f"Failed to write encryption key to file: {e}")
-            raise e
-        log.info(f"Encryption key written to {key_path}")
-        return
