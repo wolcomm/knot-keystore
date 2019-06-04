@@ -11,9 +11,6 @@
 # the License.
 """knot_keystore archive module."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import functools
 import logging
 import os
