@@ -91,7 +91,7 @@ def with_encrypted_archive(func):
 class ArchiveBase(object):
     """Base class for archive plugins."""
 
-    def __init__(self, knotc_socket=None, config=None):
+    def __init__(self, knotc_socket=None, config=None, *args, **kwargs):
         """Initialise a new instance."""
         log.debug(f"Initialising archive plugin instance {self}")
         self._knotc_socket = knotc_socket
