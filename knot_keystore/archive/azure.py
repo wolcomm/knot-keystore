@@ -34,15 +34,29 @@ class ArchiveAzure(ArchiveBase):
     def __init__(self, *args, **kwargs):
         """Initialise a new instance."""
         super().__init__(*args, **kwargs)
-        self.auth_endpoint = f"{AAD_ENDPOINT}/{self.tenant_id}"
-        self.blob_service = self.get_blob_service()
+        log.debug("Trying to aquire an azure blob service client")
+        try:
+            self.blob_service = self.get_blob_service()
+        except Exception as e:
+            log.error(f"Failed to aquire blob service client: {e}")
+            raise e
+
+    @property
+    def auth_endpoint(self):
+        """Get the authentication endpoint URL for the AAD tenant."""
+        return f"{AAD_ENDPOINT}/{self.tenant_id}"
 
     def get_blob_service(self):
         """Authenticate to the azure blob service."""
-        ctx = adal.AuthenticationContext(self.auth_endpoint)
-        token = ctx.acquire_token_with_client_credentials(STORAGE_RESOURCE_ID,
-                                                          self.client_id,
-                                                          self.client_secret)
+        log.debug("Trying to authenticate to azure AD")
+        try:
+            ctx = adal.AuthenticationContext(self.auth_endpoint)
+            token = ctx.acquire_token_with_client_credentials(STORAGE_RESOURCE_ID,  # noqa: E501
+                                                              self.client_id,
+                                                              self.client_secret)  # noqa: E
+        except Exception as e:
+            log.error(f"Failed to authenticate to azure AD: {e}")
+            raise e
         token_credential = TokenCredential(token["accessToken"])
         blob_service = BlockBlobService(account_name=self.storage_account_name,
                                         token_credential=token_credential)
@@ -57,8 +71,9 @@ class ArchiveAzure(ArchiveBase):
         log.debug(f"Tying to backup kasp-db to azure")
         log.debug(f"Checking that container '{self.container_name}' exists")
         if not self.blob_service.exists(self.container_name):
-            log.debug(f"Creating container '{self.container_name}'")
-            self.blob_service.create_container(self.container_name)
+            e = RuntimeError(f"Container {self.container_name} does not exist")
+            log.error(e)
+            raise e
         log.debug("Creating temp directory")
         with tempfile.TemporaryDirectory() as tmp_path:
             log.debug(f"Working in {tmp_path}")
@@ -94,6 +109,7 @@ class KeyResolver(object):
                              name=self.context.kek_key_name)
         else:
             self.kid = KeyId(uri=kid)
+        return self
 
     def get_auth_callback(self):
         """Get a callback to authenticate with ADAL for key vault access."""
