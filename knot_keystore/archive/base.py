@@ -12,6 +12,7 @@
 """knot_keystore.archive.base module."""
 
 import functools
+import hashlib
 import logging
 import os
 import shutil
@@ -34,7 +35,7 @@ def with_encrypted_archive(func):
         log.debug("Creating temp directory")
         with tempfile.TemporaryDirectory() as tmp_path:
             log.debug(f"Working in {tmp_path}")
-            cleartext_path = self.get_cleartext_archive(tmp_path)
+            cleartext_path, hash = self.get_cleartext_archive(tmp_path)
             ciphertext_path = f"{cleartext_path}.enc"
             log.debug("Trying to open cleartext archive for reading")
             try:
@@ -97,11 +98,20 @@ class ArchiveBase(object):
                 log.debug("Trying to create temporary kasp-db archive")
                 try:
                     path = shutil.make_archive(base_name=base_name,
-                                               format="gztar",
+                                               format="xztar",
                                                root_dir=storage_path,
                                                base_dir=kaspdb_dir)
                 except Exception as e:
                     log.error(f"Failed to create temp kasp-db archive: {e}")
                     raise e
                 log.debug(f"Created temporary archive: {path}")
-        return path
+                log.debug("Calculating sha256 hash over archive contents")
+                try:
+                    hash = hashlib.sha256()
+                    with open(path, "rb") as f:
+                        for blk in iter(functools.partial(f.read, 4096), b""):
+                            hash.update(blk)
+                except Exception as e:
+                    log.error(f"Failed to calculate hash over {path}: {e}")
+                    raise e
+        return path, hash.hexdigest()
