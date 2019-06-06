@@ -66,27 +66,63 @@ class ArchiveAzure(ArchiveBase):
         blob_service.require_encryption = True
         return blob_service
 
-    def exec(self):
-        """Execute archival proceedure."""
-        log.debug(f"Tying to backup kasp-db to azure")
+    def get_blob_hash(self):
+        """Check that container and blob exist and get the sha256 hash."""
         log.debug(f"Checking that container '{self.container_name}' exists")
         if not self.blob_service.exists(self.container_name):
             e = RuntimeError(f"Container {self.container_name} does not exist")
             log.error(e)
             raise e
+        hash = None
+        log.debug(f"Checking whether blob {self.blob_name} exists")
+        if self.blob_service.exists(self.container_name, self.blob_name):
+            log.debug("Trying to get blob metadata")
+            try:
+                metadata = self.blob_service.get_blob_metadata(self.container_name,  # noqa: E501
+                                                               self.blob_name)
+            except Exception as e:
+                log.error(f"Failed to get blob metadata: {e}")
+            log.debug("Getting content-sha265-hash property")
+            try:
+                hash = metadata["content_sha256_hash"]
+            except KeyError:
+                log.warning(f"Blob {self.blob_name} has no "
+                            "'content-sha256-hash' metadata property")
+                hash = ""
+        return hash
+
+    def exec(self):
+        """Execute archival proceedure."""
+        log.debug(f"Tying to backup kasp-db to azure")
         log.debug("Creating temp directory")
         with tempfile.TemporaryDirectory() as tmp_path:
             log.debug(f"Working in {tmp_path}")
-            cleartext_path = self.get_cleartext_archive(tmp_path)
+            path, archive_sha256_hash = self.get_cleartext_archive(tmp_path)
+            blob_sha256_hash = self.get_blob_hash()
+            if blob_sha256_hash is not None:
+                log.debug(f"Comparing local ('{archive_sha256_hash}') "
+                          f"and remote ('{blob_sha256_hash}') sha256 hashes")
+                if archive_sha256_hash == blob_sha256_hash:
+                    log.info("Content hashes match: exiting")
+                    return False
+                log.debug("Trying to take blob snapshot")
+                try:
+                    self.blob_service.snapshot_blob(self.container_name,
+                                                    self.blob_name)
+                except Exception as e:
+                    log.error(f"Failed to take blob snapshot: {e}")
+                    raise e
             log.debug(f"Trying to store archive to azure")
+            metadata = {"content_sha256_hash": archive_sha256_hash}
             try:
                 self.blob_service.create_blob_from_path(self.container_name,
                                                         self.blob_name,
-                                                        cleartext_path)
+                                                        path,
+                                                        metadata=metadata)
             except Exception as e:
                 log.error(f"Failed to create azure blob: {e}")
                 raise e
-        log.info("Encrypted archive written to"
+        log.info("Encrypted archive written to "
                  f"{self.container_name}/{self.blob_name}")
 
 
