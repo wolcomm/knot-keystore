@@ -29,10 +29,10 @@ def parse_args():
     parser.add_argument("--socket", "-s",
                         default="/run/knot/knot.sock",
                         help="path to knotc control socket")
-    parser.add_argument("--plugin", "-p",
+    parser.add_argument("--plugins", "-p",
                         choices=get_plugins(),
-                        default="local",
-                        help="select archival plugin")
+                        nargs="*",
+                        help="select archival plugins")
     parser.add_argument("--config-file", "-c",
                         default=DEFAULT_CONFIG_PATH,
                         help="path to a configuration file")
@@ -77,11 +77,14 @@ def main():
         args = parse_args()
         set_loglevel(verbosity=args.verbosity)
         config = read_config(file=args.config_file)
-        archive_plugin = get_plugins(name=args.plugin)
-        plugin_config = config.plugins.get(args.plugin, {})
-        archive = archive_plugin(knotc_socket=args.socket,
-                                 config=plugin_config)
-        archive.exec()
+        for plugin_name in config.plugins.keys():
+            if args.plugins and plugin_name not in args.plugins:
+                continue
+            plugin_class = get_plugins(name=plugin_name)
+            plugin_config = config.plugins.get(plugin_name, {})
+            plugin = plugin_class(knotc_socket=args.socket,
+                                  config=plugin_config)
+            plugin.exec()
     except KeyboardInterrupt:
         log.error("Caught keyboard interrupt: aborting")
         return 130
