@@ -24,11 +24,13 @@ log = logging.getLogger(__name__)
 class Knot(object):
     """A knot-dns control object."""
 
-    def __init__(self, socket=None, storage_path="/var/lib/knot"):
+    STORAGE = "/var/lib/knot"
+    KASP_DB = "keys"
+
+    def __init__(self, socket=None):
         """Intitialise a new instance."""
         log.debug(f"Initialising knot control instance {self}")
         self.socket = socket
-        self.storage_path = storage_path
         self.ctl = libknot.control.KnotCtl()
 
     def __enter__(self):
@@ -77,15 +79,19 @@ class Knot(object):
         config = self.config
         log.debug("Checking for configured knot storage path")
         try:
-            storage = config["template"]["default"]["storage"]
+            storage = config["template"]["default"]["storage"][0]
         except KeyError:
-            storage = self.storage_path
+            log.debug(f"No configured 'storage' in default template: "
+                      f"using default value '{self.STORAGE}'")
+            storage = self.STORAGE
         log.debug(f"Storage path is {storage}")
         log.debug("Checking for configured kasp-db path")
         try:
-            kasp_db = config["template"]["defaut"]["kasp-db"]
+            kasp_db = config["template"]["default"]["kasp-db"][0]
         except KeyError:
-            kasp_db = "keys"
+            log.debug(f"No configured 'kasp-db' in default template: "
+                      f"using default value '{self.KASP_DB}'")
+            kasp_db = self.KASP_DB
         if not kasp_db.startswith("/"):
             kasp_db = os.path.join(storage, kasp_db)
         log.info(f"Path to kasp-db: {kasp_db}")
