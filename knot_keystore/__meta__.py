@@ -12,7 +12,7 @@
 # the License.
 """knot_keystore package metadata."""
 
-__version__ = "0.1.0a2"
+__version__ = "0.1.0rc1"
 __author__ = "Ben Maddison"
 __author_email__ = "benm@workonline.africa"
 __licence__ = "MIT"
