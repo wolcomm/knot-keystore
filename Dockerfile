@@ -25,6 +25,6 @@ RUN pip install --editable .
 # configure knot
 RUN cp tests/knot/knot.conf /etc/knot/
 RUN cp tests/knot/example.com.zone /var/lib/knot/
-RUN cp tests/knot/knot-keystore.yaml /etc/
+RUN cp tests/knot/knot-keystore.yaml.secret /etc/knot-keystore.yaml
 
 ENTRYPOINT ["knotd"]
