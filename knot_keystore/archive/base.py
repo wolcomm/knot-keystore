@@ -88,6 +88,10 @@ class ArchiveBase(object):
         """Execute archival proceedure, overide in child classes."""
         raise NotImplementedError
 
+    def retrieve(self):
+        """Retrieve and decrypt archive to the knot storage path."""
+        raise NotImplementedError
+
     def get_cleartext_archive(self, tmp_path):
         """Create an archive of the knot kasp-db."""
         log.debug("Preparing to create temporary kasp-db archive")

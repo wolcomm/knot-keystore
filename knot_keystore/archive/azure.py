@@ -12,6 +12,7 @@
 """knot_keystore.archive.azure module."""
 
 import logging
+import os
 import tempfile
 
 import adal
@@ -21,6 +22,7 @@ from azure.storage.blob import BlockBlobService
 from azure.storage.common import TokenCredential
 
 from knot_keystore.archive.base import ArchiveBase
+from knot_keystore.knot import Knot
 
 log = logging.getLogger(__name__)
 
@@ -124,6 +126,23 @@ class ArchiveAzure(ArchiveBase):
                 raise e
         log.info("Encrypted archive written to "
                  f"{self.container_name}/{self.blob_name}")
+
+    def retrieve(self):
+        """Retrieve and decrypt archive to the knot storage path."""
+        log.debug(f"Trying to retrieve kasp-db archive from azure")
+        with Knot(socket=self.knotc_socket) as knot:
+            storage_path, kaspdb_dir = knot.kaspdb_path
+        cleartext_path = os.path.join(storage_path, "kasp-db.tar.xz")
+        log.debug(f"Trying to get archive from "
+                  f"{self.container_name}/{self.blob_name}")
+        try:
+            self.blob_service.get_blob_to_path(self.container_name,
+                                               self.blob_name, cleartext_path)
+        except Exception as e:
+            log.error(f"Failed to retrieve azure blob: {e}")
+            raise e
+        log.info(f"Decrypted archive written to {cleartext_path}")
+        return
 
 
 class KeyResolver(object):

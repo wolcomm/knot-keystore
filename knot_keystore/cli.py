@@ -33,6 +33,9 @@ def parse_args():
                         choices=get_plugins(),
                         nargs="*",
                         help="select archival plugins")
+    parser.add_argument("--retrieve", "-r",
+                        action="store_true",
+                        help="retrieve archive")
     parser.add_argument("--config-file", "-c",
                         default=DEFAULT_CONFIG_PATH,
                         help="path to a configuration file")
@@ -84,7 +87,11 @@ def main():
             plugin_config = config.plugins.get(plugin_name, {})
             plugin = plugin_class(knotc_socket=args.socket,
                                   config=plugin_config)
-            plugin.exec()
+            if args.retrieve:
+                plugin.retrieve()
+                break
+            else:
+                plugin.exec()
     except KeyboardInterrupt:
         log.error("Caught keyboard interrupt: aborting")
         return 130
