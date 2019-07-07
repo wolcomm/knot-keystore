@@ -30,7 +30,8 @@ optional arguments:
   socket.
 - plugins:
   - create an xz-compressed archive and put it somewhere, safely encrypted (default)
-  - retrieve and decrypt the stored archive, ready to restore to the kasp-db directory (with `--retrieve`)
+  - retrieve and decrypt the stored archive, ready to restore to the kasp-db
+    directory (with `--retrieve`)
 
 ## available plugins
 
