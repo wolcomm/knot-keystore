@@ -9,6 +9,9 @@ services:
 matrix:
   fast_finish: true
 before_install:
+- openssl aes-256-cbc -K $encrypted_f09cd5b47f21_key
+  -iv $encrypted_f09cd5b47f21_iv -in tests/knot/knot-keystore.yaml.secret.enc
+  -out tests/knot/knot-keystore.yaml.secret -d
 - pip install --upgrade --user pip setuptools codecov
 install:
 - IMAGE_ID="$(docker build --build-arg VERSION="${PYTHON_VERSION}" --quiet .)"
