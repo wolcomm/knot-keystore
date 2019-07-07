@@ -10,15 +10,17 @@ A tool to safely backup the knot kasp-db directory.
 ## overview
 
 ```bash
-usage: knot-keystore [-h] [--socket SOCKET] [--plugin {local,azure}]
-                     [--config-file CONFIG_FILE] [-v]
+usage: knot-keystore [-h] [--socket SOCKET]
+                     [--plugins [{local,azure} [{local,azure} ...]]]
+                     [--retrieve] [--config-file CONFIG_FILE] [-v]
 
 optional arguments:
   -h, --help            show this help message and exit
   --socket SOCKET, -s SOCKET
                         path to knotc control socket
-  --plugin {local,azure}, -p {local,azure}
-                        select archival plugin
+  --plugins [{local,azure} [{local,azure} ...]], -p [{local,azure} [{local,azure} ...]]
+                        select archival plugins
+  --retrieve, -r        retrieve archive
   --config-file CONFIG_FILE, -c CONFIG_FILE
                         path to a configuration file
   -v                    increase output verbosity
@@ -26,9 +28,11 @@ optional arguments:
 
 - tries to find the kasp-db path by reading `knotd` config over the control
   socket.
-- plugins create an xz-compressed archive and put it somewhere safe.
+- plugins:
+  - create an xz-compressed archive and put it somewhere, safely encrypted (default)
+  - retrieve and decrypt the stored archive, ready to restore to the kasp-db directory (with `--retrieve`)
 
-## plugins
+## available plugins
 
 - `local`: create an encrypted copy of the archive and write it to disk along
   with the encryption key. Mostly useful for testing.
