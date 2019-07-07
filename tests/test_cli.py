@@ -11,13 +11,27 @@
 # the License.
 """knot_keystore cli module tests."""
 
-import knot_keystore.cli  # noqa
+import os
+import unittest.mock
+
+import pytest
+
+from knot_keystore.archive import get_plugins
+from knot_keystore.cli import main
 
 
 class TestCli(object):
-    """Test class."""
+    """CLI test class."""
 
-    def test_cli(self):
-        """Dummy test."""
-        retval = knot_keystore.cli.main()
+    @pytest.mark.parametrize("plugin", get_plugins())
+    @pytest.mark.parametrize("retrieve", (False, True))
+    def test_cli(self, plugin, retrieve):
+        """Test CLI."""
+        config = os.path.join(os.path.dirname(__file__),
+                              "knot", "knot-keystore.yaml.secret")
+        args = ["knot-keystore", "--config-file", config, "--plugins", plugin]
+        if retrieve:
+            args.append("--retrieve")
+        with unittest.mock.patch("sys.argv", args):
+            retval = main()
         assert retval == 0
